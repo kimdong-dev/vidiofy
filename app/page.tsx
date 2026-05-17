@@ -1,14 +1,62 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { insforge } from '@/lib/insforge';
+import { useRouter } from 'next/navigation';
+
 export default function Home() {
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const result = await insforge.auth.getCurrentUser();
+      console.log('Current user:', result);
+      // result.data가 user 객체일 수도 있고, { user: {...} } 형식일 수도 있음
+      const user = result.data?.user || result.data;
+      setUser(user);
+      setLoading(false);
+    };
+    checkUser();
+  }, []);
+
+  const handleLogout = async () => {
+    await insforge.auth.signOut();
+    setUser(null);
+    router.refresh();
+  };
+
   return (
     <div className="flex flex-col flex-1 bg-[#ECEEF0]">
       {/* 헤더 */}
       <header className="w-full px-6 py-4 bg-white border-b border-[#DEE0E2]">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-[#202020]">Vidiofy</h1>
-          <nav className="flex gap-6">
+          <img src="/logo.svg" alt="Logo" className="h-10" />
+          <nav className="flex gap-6 items-center">
             <a href="#features" className="text-[#202020] hover:opacity-70 transition-opacity">기능</a>
             <a href="#pricing" className="text-[#202020] hover:opacity-70 transition-opacity">가격</a>
             <a href="#contact" className="text-[#202020] hover:opacity-70 transition-opacity">문의</a>
+            {!loading && (
+              user?.email ? (
+                <div className="flex items-center gap-4">
+                  <span className="text-[#202020] text-sm">{user.email}</span>
+                  <button
+                    onClick={handleLogout}
+                    className="bg-[#202020] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    로그아웃
+                  </button>
+                </div>
+              ) : (
+                <a
+                  href="/auth"
+                  className="bg-[#202020] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
+                >
+                  로그인
+                </a>
+              )
+            )}
           </nav>
         </div>
       </header>
@@ -23,9 +71,12 @@ export default function Home() {
             AI가 자동으로 트렌드를 분석하고, 편집하고, 최적화합니다.<br />
             당신은 아이디어만 입력하세요.
           </p>
-          <button className="bg-[#202020] text-white px-8 py-4 rounded-lg text-lg font-semibold hover:opacity-90 transition-opacity">
-            지금 시작하기
-          </button>
+          <a
+            href={user?.email ? "/dashboard" : "/auth"}
+            className="inline-block bg-[#202020] text-white px-8 py-4 rounded-lg text-lg font-semibold hover:opacity-90 transition-opacity"
+          >
+            {user?.email ? "대시보드로 이동" : "지금 시작하기"}
+          </a>
         </div>
       </section>
 
@@ -33,7 +84,7 @@ export default function Home() {
       <section id="features" className="w-full px-6 py-20 bg-white">
         <div className="max-w-6xl mx-auto">
           <h3 className="text-3xl font-bold text-[#202020] text-center mb-12">
-            왜 Vidiofy인가?
+            주요 기능
           </h3>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="p-6 bg-[#ECEEF0] rounded-lg">
@@ -120,7 +171,7 @@ export default function Home() {
       {/* 푸터 */}
       <footer className="w-full px-6 py-8 bg-white border-t border-[#DEE0E2]">
         <div className="max-w-6xl mx-auto text-center">
-          <p className="text-[#202020] opacity-70">© 2024 Vidiofy. All rights reserved.</p>
+          <p className="text-[#202020] opacity-70">© 2024 All rights reserved.</p>
         </div>
       </footer>
     </div>
